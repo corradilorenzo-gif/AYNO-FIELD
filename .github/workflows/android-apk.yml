@@ -61,12 +61,12 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p output
-          cp android/app/build/outputs/apk/debug/app-debug.apk output/AYNO_FIELD_0.9.4.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk output/AYNO_FIELD_0.9.5.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: AYNO_FIELD_APK
-          path: output/AYNO_FIELD_0.9.4.apk
+          path: output/AYNO_FIELD_0.9.5.apk
           if-no-files-found: error
           retention-days: 30
