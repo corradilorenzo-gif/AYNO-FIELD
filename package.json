@@ -1,0 +1,21 @@
+{
+  "name": "ayno-field-capacitor",
+  "version": "0.9.3",
+  "private": true,
+  "description": "AYNO FIELD - Site Survey AV, wrapper Android Capacitor",
+  "scripts": {
+    "prepare:web": "node scripts/prepare-web.mjs",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npm run prepare:web && npx cap sync android",
+    "android:debug": "npm run cap:sync && node scripts/build-android.mjs debug",
+    "android:release": "npm run cap:sync && node scripts/build-android.mjs release"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3",
+    "jspdf": "2.5.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}
