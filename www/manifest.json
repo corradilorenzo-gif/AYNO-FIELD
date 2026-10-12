@@ -1,0 +1,16 @@
+{
+  "name": "AYNO FIELD 0.9.3 — Sopralluogo AV",
+  "short_name": "AYNO FIELD",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f7f4",
+  "theme_color": "#114c96",
+  "icons": [
+    {
+      "src": "icon.svg?v=093",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
