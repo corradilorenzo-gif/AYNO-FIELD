@@ -28,6 +28,7 @@ jobs:
           echo '8ed54565a55101eef4966acaf69ec70eedefca5c5dd7d87a727e07e55e8c28c5  /tmp/forma.br' | sha256sum -c -
           /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('/tmp/forma.tar').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma.br').read_bytes()))"
           tar -xf /tmp/forma.tar -C FormaAndroid
+          sed -i 's/compileSdk = 37/compileSdk = 36/' FormaAndroid/app/build.gradle.kts
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -38,8 +39,8 @@ jobs:
         with:
           packages: platform-tools
           log-accepted-android-sdk-licenses: 'false'
-      - name: Install Android 37
-        run: sdkmanager --install 'platforms;android-37' 'build-tools;36.0.0'
+      - name: Install Android API 36
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0'
       - name: Setup Gradle 9.5.0
         uses: gradle/actions/setup-gradle@v4
         with:
