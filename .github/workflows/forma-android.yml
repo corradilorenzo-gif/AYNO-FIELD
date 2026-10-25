@@ -29,6 +29,7 @@ jobs:
           /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('/tmp/forma.tar').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma.br').read_bytes()))"
           tar -xf /tmp/forma.tar -C FormaAndroid
           sed -i 's/compileSdk = 37/compileSdk = 36/' FormaAndroid/app/build.gradle.kts
+          sed -i 's/compose-bom:2026.09.00/compose-bom:2026.06.01/' FormaAndroid/app/build.gradle.kts
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
