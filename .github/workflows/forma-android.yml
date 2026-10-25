@@ -1,4 +1,4 @@
-name: Forma Android APK
+name: Forma Android APK 0.2.1
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Restore Forma 0.2 project
+      - name: Restore Forma 0.2 and apply 0.2.1 fix
         shell: bash
         run: |
           set -euo pipefail
@@ -29,6 +29,7 @@ jobs:
           echo '1f3eb5e9045fbf06a665683ab061d7e1e0ffbd3a6f81488139665bfd001a8c8f  /tmp/forma.br' | sha256sum -c -
           /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('/tmp/forma.tar').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma.br').read_bytes()))"
           tar -xf /tmp/forma.tar -C FormaAndroid
+          python3 FormaAndroid/v021/fix_profile.py
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -51,7 +52,7 @@ jobs:
       - name: Upload Forma APK
         uses: actions/upload-artifact@v4
         with:
-          name: Forma-Android-0.2-debug
+          name: Forma-Android-0.2.1-debug
           path: FormaAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
