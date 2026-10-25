@@ -5,6 +5,7 @@ on:
     branches: [forma-android-build]
     paths:
       - 'FormaAndroid/source.part*'
+      - 'FormaAndroid/v02/payload.part*'
       - '.github/workflows/forma-android.yml'
   workflow_dispatch:
 
@@ -18,18 +19,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Restore Forma project
+      - name: Restore Forma 0.2 project
         shell: bash
         run: |
           set -euo pipefail
           python3 -m venv /tmp/forma-env
           /tmp/forma-env/bin/pip install Brotli==1.1.0
-          cat FormaAndroid/source.part{1,2,3,4} | base64 --decode > /tmp/forma.br
-          echo '8ed54565a55101eef4966acaf69ec70eedefca5c5dd7d87a727e07e55e8c28c5  /tmp/forma.br' | sha256sum -c -
+          cat FormaAndroid/v02/payload.part{01,02,03,04,05,06,07,08} | base64 --decode > /tmp/forma.br
+          echo '1f3eb5e9045fbf06a665683ab061d7e1e0ffbd3a6f81488139665bfd001a8c8f  /tmp/forma.br' | sha256sum -c -
           /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('/tmp/forma.tar').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma.br').read_bytes()))"
           tar -xf /tmp/forma.tar -C FormaAndroid
-          sed -i 's/compileSdk = 37/compileSdk = 36/' FormaAndroid/app/build.gradle.kts
-          sed -i 's/compose-bom:2026.09.00/compose-bom:2026.06.01/' FormaAndroid/app/build.gradle.kts
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -52,7 +51,7 @@ jobs:
       - name: Upload Forma APK
         uses: actions/upload-artifact@v4
         with:
-          name: Forma-Android-debug
+          name: Forma-Android-0.2-debug
           path: FormaAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
