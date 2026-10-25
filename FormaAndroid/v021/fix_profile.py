@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Forma v0.2.1: patch profile persistence and backup restore after source restoration."""
 from pathlib import Path
-root=Path(__file__).resolve().parents[2]  # FormaAndroid/v021/fix_profile.py -> FormaAndroid
+root=Path(__file__).resolve().parents[1]  # v021/fix_profile.py -> FormaAndroid
 app=root/"app/src/main/java/it/forma/app"
 screens=app/"ui/FormaScreens.kt"
 store=app/"data/FormaStore.kt"
