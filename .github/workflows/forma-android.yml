@@ -1,4 +1,4 @@
-name: Forma Android APK 0.2.1
+name: Forma Android APK 0.3
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
     paths:
       - 'FormaAndroid/source.part*'
       - 'FormaAndroid/v02/payload.part*'
+      - 'FormaAndroid/v03/payload.part*'
       - '.github/workflows/forma-android.yml'
   workflow_dispatch:
 
@@ -19,7 +20,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Restore Forma 0.2 and apply 0.2.1 fix
+      - name: Restore Forma 0.3 with saved data compatibility
         shell: bash
         run: |
           set -euo pipefail
@@ -30,6 +31,11 @@ jobs:
           /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('/tmp/forma.tar').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma.br').read_bytes()))"
           tar -xf /tmp/forma.tar -C FormaAndroid
           python3 FormaAndroid/v021/fix_profile.py
+          cat FormaAndroid/v03/payload.part{01,02,03,04,05} | base64 --decode > /tmp/forma-v03.br
+          echo '21a28299a18334b1794014ea5047106734265d6979eaa385b5c3abf8757f1e16  /tmp/forma-v03.br' | sha256sum -c -
+          /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('/tmp/forma-v03.tar').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma-v03.br').read_bytes()))"
+          tar -xf /tmp/forma-v03.tar -C FormaAndroid
+          grep -q 'versionName = "0.3.0"' FormaAndroid/app/build.gradle.kts
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -52,7 +58,7 @@ jobs:
       - name: Upload Forma APK
         uses: actions/upload-artifact@v4
         with:
-          name: Forma-Android-0.2.1-debug
+          name: Forma-Android-0.3-debug
           path: FormaAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
