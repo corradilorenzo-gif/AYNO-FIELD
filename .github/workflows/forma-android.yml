@@ -51,6 +51,7 @@ jobs:
           echo '26ba79be717d0d5719f948b78b6a3e70e9a72f82be93399d6a7793e3f6d5577e  /tmp/forma-v05.br' | sha256sum -c -
           /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('/tmp/forma-v05.tar').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma-v05.br').read_bytes()))"
           tar -xf /tmp/forma-v05.tar -C FormaAndroid
+          sed -i 's/0.4.1 · Diario libero e fonti proteiche/0.4.1 · Tabella fonti proteiche/' FormaAndroid/app/src/main/java/it/forma/app/ui/FormaScreens.kt
           (cd FormaAndroid && patch -p1 --batch -i patch.diff)
           grep -q 'versionName = "0.5.0"' FormaAndroid/app/build.gradle.kts
           grep -q 'I miei allenamenti' FormaAndroid/app/src/main/java/it/forma/app/ui/WorkoutDiarySection.kt
