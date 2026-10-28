@@ -1,4 +1,4 @@
-name: Forma Android APK 0.4
+name: Forma Android APK 0.4.1
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - 'FormaAndroid/v02/payload.part*'
       - 'FormaAndroid/v03/payload.part*'
       - 'FormaAndroid/v04/*'
+      - 'FormaAndroid/v041/*'
       - '.github/workflows/forma-android.yml'
   workflow_dispatch:
 
@@ -42,6 +43,8 @@ jobs:
           /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('update_diary_first.py').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma-v04.br').read_bytes()))"
           python3 update_diary_first.py
           grep -q 'versionName = "0.4.0"' FormaAndroid/app/build.gradle.kts
+          python3 FormaAndroid/v041/add_protein_table.py
+          grep -q 'versionName = "0.4.1"' FormaAndroid/app/build.gradle.kts
           ! grep -q 'Registra proposta del menù' FormaAndroid/app/src/main/java/it/forma/app/ui/FoodEnergySection.kt
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -65,7 +68,7 @@ jobs:
       - name: Upload Forma APK
         uses: actions/upload-artifact@v4
         with:
-          name: Forma-Android-0.4-debug
+          name: Forma-Android-0.4.1-debug
           path: FormaAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
