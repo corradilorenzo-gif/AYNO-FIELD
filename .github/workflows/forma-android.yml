@@ -1,4 +1,4 @@
-name: Forma Android APK 0.3
+name: Forma Android APK 0.4
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
       - 'FormaAndroid/source.part*'
       - 'FormaAndroid/v02/payload.part*'
       - 'FormaAndroid/v03/payload.part*'
+      - 'FormaAndroid/v04/*'
       - '.github/workflows/forma-android.yml'
   workflow_dispatch:
 
@@ -20,7 +21,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Restore Forma 0.3 with saved data compatibility
+      - name: Restore Forma 0.4 preserving saved diary data
         shell: bash
         run: |
           set -euo pipefail
@@ -36,6 +37,12 @@ jobs:
           /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('/tmp/forma-v03.tar').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma-v03.br').read_bytes()))"
           tar -xf /tmp/forma-v03.tar -C FormaAndroid
           grep -q 'versionName = "0.3.0"' FormaAndroid/app/build.gradle.kts
+          base64 --decode FormaAndroid/v04/update_diary_first.br.b64 > /tmp/forma-v04.br
+          echo '41c120218f8d6bceff89628c1e471c7021ea6607945bcbe2d9086c26e95db95d  /tmp/forma-v04.br' | sha256sum -c -
+          /tmp/forma-env/bin/python -c "import brotli,pathlib;pathlib.Path('update_diary_first.py').write_bytes(brotli.decompress(pathlib.Path('/tmp/forma-v04.br').read_bytes()))"
+          python3 update_diary_first.py
+          grep -q 'versionName = "0.4.0"' FormaAndroid/app/build.gradle.kts
+          ! grep -q 'Registra proposta del menù' FormaAndroid/app/src/main/java/it/forma/app/ui/FoodEnergySection.kt
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -58,7 +65,7 @@ jobs:
       - name: Upload Forma APK
         uses: actions/upload-artifact@v4
         with:
-          name: Forma-Android-0.3-debug
+          name: Forma-Android-0.4-debug
           path: FormaAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
