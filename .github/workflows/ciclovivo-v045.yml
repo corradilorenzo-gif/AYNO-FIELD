@@ -1,0 +1,55 @@
+name: CicloVivo 0.4.5 APK
+on:
+  push:
+    branches: [ciclovivo-build]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare source
+        run: |
+          mkdir -p CicloVivo
+          base64 -d CicloVivo/.build/source043.b64 > /tmp/source.tar.xz
+          echo "3f93a292c5f58d33ab20d0178af7c13d00008944f9dfbe7ee428c89e407a5667  /tmp/source.tar.xz" | sha256sum -c -
+          tar -xJf /tmp/source.tar.xz -C CicloVivo
+          base64 -d CicloVivo/.build/upgrade044.patch.xz.b64 > /tmp/update44.xz
+          echo "eb9ceca31d3de5a8f04432a8bee3458f013a11cbb898583717c0eb2b51c80810  /tmp/update44.xz" | sha256sum -c -
+          xz -dc /tmp/update44.xz | (cd CicloVivo && patch --batch --fuzz=0 -p2)
+          base64 -d CicloVivo/.build/upgrade045.patch.xz.b64 > /tmp/update45.xz
+          echo "a71c5119f08a9bdcc49a77a71af86edcc49e1b2ca1a7bd5acdff6f9eb551fcc6  /tmp/update45.xz" | sha256sum -c -
+          xz -dc /tmp/update45.xz | (cd CicloVivo && patch --batch --fuzz=0 -p1)
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+      - name: Install SDK
+        run: |
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -1)
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Unit tests and APK
+        run: gradle -p CicloVivo :app:testDebugUnitTest :app:assembleRelease --stacktrace
+      - name: Verify tests
+        run: |
+          python3 - <<'PY'
+          import glob,xml.etree.ElementTree as ET
+          reports=glob.glob('CicloVivo/app/build/test-results/testDebugUnitTest/*.xml')
+          assert reports
+          tests=sum(int(ET.parse(p).getroot().attrib.get('tests',0)) for p in reports)
+          errors=sum(int(ET.parse(p).getroot().attrib.get('failures',0))+int(ET.parse(p).getroot().attrib.get('errors',0)) for p in reports)
+          print(tests, errors)
+          assert tests>=40 and errors==0
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CicloVivo-0.4.5-release-unsigned
+          path: CicloVivo/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
