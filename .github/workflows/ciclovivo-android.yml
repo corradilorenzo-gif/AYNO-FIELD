@@ -20,7 +20,7 @@ jobs:
       - name: Apply verified Gadgetbridge 0.4 patch
         run: |
           base64 -d CicloVivo/.build/gadgetbridge-v04.patch.b64 > /tmp/gadgetbridge-v04.patch.xz
-          echo "641d5f9befbec4e766f03198f9b44f1de5192cfcba3eb08d745f7eba0a5ed9b1  /tmp/gadgetbridge-v04.patch.xz" | sha256sum -c -
+          echo "1f388b21a52a8695356e54e50fe9a771f7787c13a24277b7a79602f8f7fc5936  /tmp/gadgetbridge-v04.patch.xz" | sha256sum -c -
           xz -dc /tmp/gadgetbridge-v04.patch.xz | (cd CicloVivo && patch --batch --fuzz=0 -p1)
           test -f CicloVivo/app/src/main/java/it/ciclovivo/app/GadgetbridgeConnector.kt
       - uses: actions/setup-java@v4
