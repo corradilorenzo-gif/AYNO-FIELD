@@ -32,7 +32,9 @@ jobs:
         with:
           gradle-version: '9.6.0'
       - name: Configure stable SDK API level
-        run: sed -i 's/compileSdk = 37/compileSdk = 36/;s/targetSdk = 37/targetSdk = 36/' CicloVivo/app/build.gradle.kts
+        run: |
+          sed -i 's/compileSdk = 37/compileSdk = 36/;s/targetSdk = 37/targetSdk = 36/' CicloVivo/app/build.gradle.kts
+          sed -i 's/compose-bom:2026.09.00/compose-bom:2025.10.01/' CicloVivo/app/build.gradle.kts
       - name: Compile CicloVivo
         run: gradle -p CicloVivo :app:testDebugUnitTest :app:assembleDebug --stacktrace
       - name: Publish debug APK
