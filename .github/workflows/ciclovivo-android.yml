@@ -1,4 +1,4 @@
-name: CicloVivo 0.4.3 - logo rosa, Health Connect, Calendar
+name: CicloVivo 0.4.4 - calendario automatico
 on:
   push:
     branches: [ciclovivo-build]
@@ -20,6 +20,13 @@ jobs:
           grep -q 'versionName = "0.4.3"' CicloVivo/app/build.gradle.kts
           test -f CicloVivo/app/src/main/res/drawable-nodpi/ciclovivo_launcher_art.png
           test -f CicloVivo/app/src/main/java/it/ciclovivo/app/CalendarBridge.kt
+      - name: Apply verified CicloVivo 0.4.4 changes
+        run: |
+          base64 -d CicloVivo/.build/upgrade044.patch.xz.b64 > /tmp/upgrade044.patch.xz
+          echo "eb9ceca31d3de5a8f04432a8bee3458f013a11cbb898583717c0eb2b51c80810  /tmp/upgrade044.patch.xz" | sha256sum -c -
+          xz -dc /tmp/upgrade044.patch.xz | (cd CicloVivo && patch --batch --fuzz=0 -p2)
+          grep -q 'versionName = "0.4.4"' CicloVivo/app/build.gradle.kts
+          test -f CicloVivo/app/src/test/java/it/ciclovivo/app/CalendarSyncPlannerTest.kt
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -44,11 +51,11 @@ jobs:
           tests=sum(int(ET.parse(f).getroot().attrib.get('tests',0)) for f in files)
           errors=sum(int(ET.parse(f).getroot().attrib.get('errors',0))+int(ET.parse(f).getroot().attrib.get('failures',0)) for f in files)
           print(f'{tests} test eseguiti, {errors} errori')
-          assert tests>=29 and errors==0
+          assert tests>=34 and errors==0
           PY
       - name: Upload unsigned release for offline signing
         uses: actions/upload-artifact@v4
         with:
-          name: CicloVivo-0.4.3-unsigned-release
+          name: CicloVivo-0.4.4-unsigned-release
           path: CicloVivo/app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
