@@ -1,4 +1,4 @@
-name: CicloVivo 0.4.6 - audit build
+name: CicloVivo 0.4.6 - audit build finale
 on:
   push:
     branches: [ciclovivo-build]
@@ -27,6 +27,9 @@ jobs:
           echo "e14358bb0cce8b623c091a5397a1aa392ca44020752f179a86dd98f6261b70ca  /tmp/upgrade046.xz" | sha256sum -c -
           xz -dc /tmp/upgrade046.xz | (cd CicloVivo && patch --batch --fuzz=0 -p1)
           grep -q 'versionCode = 10' CicloVivo/app/build.gradle.kts
+          base64 -d CicloVivo/.build/upgrade046b.patch.xz.b64 > /tmp/upgrade046b.xz
+          echo "2bb9885a19e9461483c9727ef965fd3f4ec68853e65f5e5cab71b00598fb1c50  /tmp/upgrade046b.xz" | sha256sum -c -
+          xz -dc /tmp/upgrade046b.xz | (cd CicloVivo && patch --batch --fuzz=0 -p1)
           test -f CicloVivo/app/src/main/java/it/ciclovivo/app/ArchiveRecovery.kt
           test -f CicloVivo/app/src/test/java/it/ciclovivo/app/HealthAlertRegressionTest.kt
           test -f CicloVivo/app/src/main/res/drawable-nodpi/ciclovivo_launcher_art.png
