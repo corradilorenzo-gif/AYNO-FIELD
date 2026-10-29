@@ -29,6 +29,7 @@ jobs:
           echo "66bc907f2ba14227f8614098f04ac84db2382bf4d58cbf967a174f48fe9e8ec1  /tmp/cv041.py.xz" | sha256sum -c -
           xz -dc /tmp/cv041.py.xz > /tmp/cv041.py
           python3 /tmp/cv041.py
+          sed -i 's/2026, 09, 20/2026, 9, 20/g' CicloVivo/app/src/test/java/it/ciclovivo/app/CycleCalculatorTest.kt
           grep -q 'versionName = "0.4.1"' CicloVivo/app/build.gradle.kts
       - uses: actions/setup-java@v4
         with:
