@@ -1,4 +1,4 @@
-name: CicloVivo 0.3 - build APK e test
+name: CicloVivo 0.4 - Gadgetbridge / Health Connect
 on:
   push:
     branches: [ciclovivo-build]
@@ -17,6 +17,12 @@ jobs:
           cat CicloVivo/.build/part*.txt | base64 -d > /tmp/ciclovivo-source.tar.xz
           echo "0adeb099cfb774b5b99d505bcd02883cd19f96a4bde4500dbecd34f281902841  /tmp/ciclovivo-source.tar.xz" | sha256sum -c -
           tar -xJf /tmp/ciclovivo-source.tar.xz -C CicloVivo
+      - name: Apply verified Gadgetbridge 0.4 patch
+        run: |
+          base64 -d CicloVivo/.build/gadgetbridge-v04.patch.b64 > /tmp/gadgetbridge-v04.patch.xz
+          echo "641d5f9befbec4e766f03198f9b44f1de5192cfcba3eb08d745f7eba0a5ed9b1  /tmp/gadgetbridge-v04.patch.xz" | sha256sum -c -
+          xz -dc /tmp/gadgetbridge-v04.patch.xz | (cd CicloVivo && patch --batch --fuzz=0 -p1)
+          test -f CicloVivo/app/src/main/java/it/ciclovivo/app/GadgetbridgeConnector.kt
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -34,6 +40,7 @@ jobs:
         run: |
           test -f CicloVivo/app/src/test/java/it/ciclovivo/app/CycleCalculatorTest.kt
           test -f CicloVivo/app/src/test/java/it/ciclovivo/app/BackupCryptoTest.kt
+          test -f CicloVivo/app/src/test/java/it/ciclovivo/app/WearableImportTest.kt
       - name: Unit tests and APK
         run: gradle -p CicloVivo :app:testDebugUnitTest :app:assembleDebug --stacktrace
       - name: Verify unit tests actually ran
@@ -44,13 +51,13 @@ jobs:
           assert files,'Nessun rapporto JUnit trovato'
           tests=sum(int(ET.parse(f).getroot().attrib.get('tests',0)) for f in files)
           failed=sum(int(ET.parse(f).getroot().attrib.get('failures',0))+int(ET.parse(f).getroot().attrib.get('errors',0)) for f in files)
-          assert tests>=10 and failed==0,f'Test insufficienti o falliti: {tests}, {failed}'
+          assert tests>=20 and failed==0,f'Test insufficienti o falliti: {tests}, {failed}'
           print(f'{tests} test JUnit eseguiti; {failed} falliti')
           PY
       - name: Publish APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: CicloVivo-0.3-debug-APK
+          name: CicloVivo-0.4-Gadgetbridge-debug-APK
           path: CicloVivo/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
