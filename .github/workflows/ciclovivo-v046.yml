@@ -1,0 +1,65 @@
+name: CicloVivo 0.4.6 - audit build
+on:
+  push:
+    branches: [ciclovivo-build]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare and verify source patches
+        run: |
+          mkdir -p CicloVivo
+          base64 -d CicloVivo/.build/source043.b64 > /tmp/source.tar.xz
+          echo "3f93a292c5f58d33ab20d0178af7c13d00008944f9dfbe7ee428c89e407a5667  /tmp/source.tar.xz" | sha256sum -c -
+          tar -xJf /tmp/source.tar.xz -C CicloVivo
+          base64 -d CicloVivo/.build/upgrade044.patch.xz.b64 > /tmp/upgrade044.xz
+          echo "eb9ceca31d3de5a8f04432a8bee3458f013a11cbb898583717c0eb2b51c80810  /tmp/upgrade044.xz" | sha256sum -c -
+          xz -dc /tmp/upgrade044.xz | (cd CicloVivo && patch --batch --fuzz=0 -p2)
+          base64 -d CicloVivo/.build/upgrade045.patch.xz.b64 > /tmp/upgrade045.xz
+          echo "a71c5119f08a9bdcc49a77a71af86edcc49e1b2ca1a7bd5acdff6f9eb551fcc6  /tmp/upgrade045.xz" | sha256sum -c -
+          xz -dc /tmp/upgrade045.xz | (cd CicloVivo && patch --batch --fuzz=0 -p1)
+          base64 -d CicloVivo/.build/upgrade046.patch.xz.b64 > /tmp/upgrade046.xz
+          echo "e14358bb0cce8b623c091a5397a1aa392ca44020752f179a86dd98f6261b70ca  /tmp/upgrade046.xz" | sha256sum -c -
+          xz -dc /tmp/upgrade046.xz | (cd CicloVivo && patch --batch --fuzz=0 -p1)
+          grep -q 'versionCode = 10' CicloVivo/app/build.gradle.kts
+          test -f CicloVivo/app/src/main/java/it/ciclovivo/app/ArchiveRecovery.kt
+          test -f CicloVivo/app/src/test/java/it/ciclovivo/app/HealthAlertRegressionTest.kt
+          test -f CicloVivo/app/src/main/res/drawable-nodpi/ciclovivo_launcher_art.png
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+      - name: Android SDK
+        run: |
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -1)
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Unit tests and APK builds
+        run: gradle -p CicloVivo :app:testDebugUnitTest :app:assembleRelease :app:assembleDebugAndroidTest --stacktrace
+      - name: Verify unit test reports
+        run: |
+          python3 - <<'PY'
+          import glob,xml.etree.ElementTree as ET
+          reports=glob.glob('CicloVivo/app/build/test-results/testDebugUnitTest/*.xml')
+          assert reports,'No JUnit reports'
+          tests=sum(int(ET.parse(p).getroot().attrib.get('tests',0)) for p in reports)
+          failures=sum(int(ET.parse(p).getroot().attrib.get('failures',0))+int(ET.parse(p).getroot().attrib.get('errors',0)) for p in reports)
+          print(f'JUnit {tests} tests; {failures} failures')
+          assert tests>=55 and failures==0
+          PY
+      - name: Check Android Lint
+        run: gradle -p CicloVivo :app:lintDebug --stacktrace
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: CicloVivo-0.4.6-unsigned-release
+          path: CicloVivo/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
