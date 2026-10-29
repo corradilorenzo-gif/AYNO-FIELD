@@ -1,4 +1,4 @@
-name: CicloVivo - build APK
+name: CicloVivo 0.3 - build APK e test
 on:
   push:
     branches: [ciclovivo-build]
@@ -8,14 +8,14 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-      - name: Verify and extract CicloVivo source
+      - name: Extract verified CicloVivo 0.3 source
         run: |
           mkdir -p CicloVivo
           cat CicloVivo/.build/part*.txt | base64 -d > /tmp/ciclovivo-source.tar.xz
-          echo "2ca0fef4a82d8fdcc7dd131a5387f74842102056e8795d31a8c3c26594f89983  /tmp/ciclovivo-source.tar.xz" | sha256sum -c -
+          echo "0adeb099cfb774b5b99d505bcd02883cd19f96a4bde4500dbecd34f281902841  /tmp/ciclovivo-source.tar.xz" | sha256sum -c -
           tar -xJf /tmp/ciclovivo-source.tar.xz -C CicloVivo
       - uses: actions/setup-java@v4
         with:
@@ -23,24 +23,34 @@ jobs:
           java-version: '21'
       - name: Install Android SDK 36
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
           SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -1)
-          test -x "$SDKMANAGER" || { echo "sdkmanager non trovato"; exit 1; }
+          test -x "$SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" 'platforms;android-36' 'build-tools;36.0.0'
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.6.0'
-      - name: Configure stable SDK API level
+      - name: Ensure actual tests are present
         run: |
-          sed -i 's/compileSdk = 37/compileSdk = 36/;s/targetSdk = 37/targetSdk = 36/' CicloVivo/app/build.gradle.kts
-          sed -i 's/compose-bom:2026.09.00/compose-bom:2025.10.01/' CicloVivo/app/build.gradle.kts
-      - name: Compile CicloVivo
+          test -f CicloVivo/app/src/test/java/it/ciclovivo/app/CycleCalculatorTest.kt
+          test -f CicloVivo/app/src/test/java/it/ciclovivo/app/BackupCryptoTest.kt
+      - name: Unit tests and APK
         run: gradle -p CicloVivo :app:testDebugUnitTest :app:assembleDebug --stacktrace
-      - name: Publish debug APK
+      - name: Verify unit tests actually ran
+        run: |
+          python3 - <<'PY'
+          import glob,xml.etree.ElementTree as ET
+          files=glob.glob('CicloVivo/app/build/test-results/testDebugUnitTest/*.xml')
+          assert files,'Nessun rapporto JUnit trovato'
+          tests=sum(int(ET.parse(f).getroot().attrib.get('tests',0)) for f in files)
+          failed=sum(int(ET.parse(f).getroot().attrib.get('failures',0))+int(ET.parse(f).getroot().attrib.get('errors',0)) for f in files)
+          assert tests>=10 and failed==0,f'Test insufficienti o falliti: {tests}, {failed}'
+          print(f'{tests} test JUnit eseguiti; {failed} falliti')
+          PY
+      - name: Publish APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: CicloVivo-0.2-debug-APK
+          name: CicloVivo-0.3-debug-APK
           path: CicloVivo/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
