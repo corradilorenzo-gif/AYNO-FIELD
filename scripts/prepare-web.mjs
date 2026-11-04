@@ -52,5 +52,19 @@ html,body{max-width:100%;overflow-x:hidden}body{padding-left:env(safe-area-inset
 </style>`;
 html = html.replace('</head>', `${androidResponsiveFix}\n</head>`);
 
+
+html = html.replace(/AYNO FIELD 0\\.9\\.[345]/g, 'AYNO FIELD 0.9.6');
+const photoStyle = `<style id="photo-aspect-ratio-fix">
+.photo{aspect-ratio:auto;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.photo img{display:block;width:100%;height:auto;max-width:100%;object-fit:contain}
+.photo figcaption{position:static;left:auto;right:auto;bottom:auto;background:#fff;color:#444;padding:9px 10px;font-size:11px;overflow-wrap:anywhere}
+.photo button{z-index:1}
+</style>`;
+html = html.replace('</head>', photoStyle + '\\n</head>');
+const oldPdfPhoto = "try{doc.addImage(ph.data,'JPEG',x,py,86,57,undefined,'FAST')}catch(e){try{doc.addImage(ph.data,'PNG',x,py,86,57,undefined,'FAST')}catch(_){} }";
+const newPdfPhoto = "try{let info=doc.getImageProperties(ph.data);let scale=Math.min(86/info.width,57/info.height);let iw=info.width*scale,ih=info.height*scale;doc.addImage(ph.data,info.fileType||'JPEG',x+(86-iw)/2,py+(57-ih)/2,iw,ih,undefined,'FAST')}catch(e){console.warn('Foto PDF non valida',e)}";
+if (!html.includes(oldPdfPhoto)) throw new Error('PDF photo call not found');
+html = html.replace(oldPdfPhoto, newPdfPhoto);
+
 fs.writeFileSync(indexPath, html);
 console.log('Web assets preparati. jsPDF locale/offline, index ricostruito e fix Android 0.9.5 applicato.');
